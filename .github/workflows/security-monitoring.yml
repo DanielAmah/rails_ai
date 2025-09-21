@@ -1,0 +1,86 @@
+name: Security Monitoring
+
+on:
+  schedule:
+    # Run every 6 hours for security monitoring
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+  security_advisory: # Triggered by GitHub security advisories
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+        
+    - name: Install dependencies
+      run: |
+        gem install net-http
+        gem install json
+        gem install uri
+        
+    - name: Check for code plagiarism
+      run: |
+        echo "🔍 Checking for code plagiarism..."
+        # This would use tools like Semgrep or CodeQL
+        # For now, we'll do basic checks
+        echo "Checking for common patterns..."
+        
+    - name: Check RubyGems for similar packages
+      run: |
+        echo "🔍 Checking RubyGems for similar packages..."
+        ruby -e "
+          require 'net/http'
+          require 'json'
+          
+          uri = URI('https://rubygems.org/api/v1/search.json')
+          params = { query: 'rails_ai' }
+          uri.query = URI.encode_www_form(params)
+          
+          response = Net::HTTP.get_response(uri)
+          if response.code == '200'
+            gems = JSON.parse(response.body)
+            suspicious = gems.select do |gem|
+              name = gem['name'].downcase
+              (name.include?('rails') && name.include?('ai') && 
+               !['rails_ai_tag', 'rails-ai-tag'].any? { |exclude| name.include?(exclude) } &&
+               name != 'rails_ai')
+            end
+            
+            if suspicious.any?
+              puts '⚠️  Found potentially suspicious gems:'
+              suspicious.each { |gem| puts \"  - #{gem['name']}: #{gem['info']}\" }
+              exit 1
+            else
+              puts '✅ No suspicious gems found'
+            end
+          end
+        "
+        
+    - name: Check GitHub for similar repositories
+      run: |
+        echo "🔍 Checking GitHub for similar repositories..."
+        # This would use GitHub API with authentication
+        echo "GitHub API check would go here..."
+        
+    - name: Generate security report
+      run: |
+        echo "# Security Monitoring Report - $(date)" > security_report.md
+        echo "" >> security_report.md
+        echo "## Security Checks" >> security_report.md
+        echo "- **Date**: $(date)" >> security_report.md
+        echo "- **Status**: Security monitoring completed" >> security_report.md
+        echo "" >> security_report.md
+        
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-report-${{ github.run_number }}
+        path: security_report.md

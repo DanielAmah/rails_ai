@@ -1,0 +1,51 @@
+<%# frozen_string_literal: true %>
+
+<div class="rails-ai-dashboard">
+  <h1>Rails AI Dashboard</h1>
+  
+  <div class="ai-chat-interface">
+    <%= render RailsAi::PromptComponent.new(
+      prompt: "Hello, how can I help you today?",
+      stream_id: ai_stream_id
+    ) %>
+  </div>
+
+  <div class="ai-features">
+    <h2>Available Features</h2>
+    <ul>
+      <li>AI Chat Interface</li>
+      <li>Content Summarization</li>
+      <li>Embedding Generation</li>
+      <li>Streaming Responses</li>
+    </ul>
+  </div>
+
+  <div class="ai-config">
+    <h2>Configuration</h2>
+    <p>Provider: <%= RailsAi.config.provider %></p>
+    <p>Model: <%= RailsAi.config.default_model %></p>
+    <p>Cache TTL: <%= RailsAi.config.cache_ttl %></p>
+  </div>
+</div>
+
+<style>
+.rails-ai-dashboard {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.ai-chat-interface {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.ai-features, .ai-config {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+</style>

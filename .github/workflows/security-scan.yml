@@ -1,0 +1,107 @@
+name: Security Scan
+
+on:
+  schedule:
+    # Run daily security scans
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'lib/**'
+      - 'spec/**'
+      - '.github/workflows/security-scan.yml'
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.0'
+        
+    - name: Install dependencies
+      run: |
+        gem install bundler
+        bundle install
+        
+    - name: Run security tests
+      run: |
+        echo "�� Running security tests..."
+        bundle exec rspec spec/security/ --format documentation
+        
+    - name: Run Brakeman security scan
+      run: |
+        echo "🔍 Running Brakeman security scan..."
+        gem install brakeman
+        brakeman --no-pager --format json --output brakeman-report.json || true
+        
+    - name: Run Bundle Audit
+      run: |
+        echo "🔍 Running bundle audit..."
+        gem install bundle-audit
+        bundle-audit check --update || true
+        
+    - name: Run RuboCop security checks
+      run: |
+        echo "🔍 Running RuboCop security checks..."
+        bundle exec rubocop --only Security --format json --out rubocop-security.json || true
+        
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports-${{ github.run_number }}
+        path: |
+          brakeman-report.json
+          rubocop-security.json
+          security-test-results.txt
+        
+    - name: Create security summary
+      run: |
+        echo "# Security Scan Report - $(date)" > security-summary.md
+        echo "" >> security-summary.md
+        echo "## Scan Results" >> security-summary.md
+        echo "- **Date**: $(date)" >> security-summary.md
+        echo "- **Commit**: ${{ github.sha }}" >> security-summary.md
+        echo "- **Branch**: ${{ github.ref_name }}" >> security-summary.md
+        echo "" >> security-summary.md
+        
+        if [ -f brakeman-report.json ]; then
+          echo "## Brakeman Security Scan" >> security-summary.md
+          echo "" >> security-summary.md
+          cat brakeman-report.json >> security-summary.md
+        fi
+        
+        if [ -f rubocop-security.json ]; then
+          echo "## RuboCop Security Checks" >> security-summary.md
+          echo "" >> security-summary.md
+          cat rubocop-security.json >> security-summary.md
+        fi
+        
+    - name: Upload security summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-summary-${{ github.run_number }}
+        path: security-summary.md
+        
+    - name: Comment on PR (if applicable)
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          if (fs.existsSync('security-summary.md')) {
+            const summary = fs.readFileSync('security-summary.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🔒 Security Scan Report\n\n${summary}`
+            });
+          }
