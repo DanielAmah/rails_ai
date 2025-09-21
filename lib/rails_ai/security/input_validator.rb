@@ -6,7 +6,7 @@ require 'ipaddr'
 module RailsAi
   module Security
     class InputValidator
-      MAX_FILE_SIZE = 50.megabytes
+      MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB in bytes
       ALLOWED_IMAGE_TYPES = %w[image/jpeg image/png image/gif image/webp].freeze
       ALLOWED_VIDEO_TYPES = %w[video/mp4 video/webm video/quicktime].freeze
       ALLOWED_AUDIO_TYPES = %w[audio/mpeg audio/wav audio/ogg audio/mp4].freeze

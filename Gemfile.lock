@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rails_ai (0.1.0)
+    rails_ai (0.2.1)
       benchmark-ips (~> 2.10)
       concurrent-ruby (~> 1.0)
       connection_pool (~> 2.4)

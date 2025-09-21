@@ -151,7 +151,7 @@ module RailsAi
 
     # Agent teams
     def create_agent_team(name, agents, strategy: :round_robin)
-      agent_manager.create_agent_team(name, agents, strategy: strategy)
+      agent_manager.create_agent_team(name, agents, collaboration_strategy: strategy)
     end
 
     def orchestrate_collaboration(task, agent_names)
@@ -474,7 +474,6 @@ module RailsAi
       messages
     end
   end
-end
 
   # Security methods
   def self.validate_input(input, type: :text)
@@ -500,3 +499,67 @@ end
   def self.handle_security_error(error, context = {})
     Security::ErrorHandler.handle_security_error(error, context)
   end
+require_relative "rails_ai/web_search"
+
+  # Web-enhanced chat with real-time information
+
+  # Web-enhanced chat with real-time information
+  def self.chat_with_web_search(prompt, model: config.default_model, **opts)
+    # Check if the prompt needs web search
+    web_keywords = ['current', 'latest', 'today', 'now', 'recent', 'weather', 'news', 'stock', 'price']
+    needs_web_search = web_keywords.any? { |keyword| prompt.downcase.include?(keyword) }
+    
+    if needs_web_search
+      begin
+        # Perform web search
+        search_results = WebSearch.search(prompt, num_results: 3)
+        
+        # Enhance the prompt with web results
+        web_context = "\n\nRecent web search results:\n"
+        search_results.each_with_index do |result, index|
+          web_context += "#{index + 1}. #{result[:title]}\n   #{result[:snippet]}\n   Source: #{result[:link]}\n\n"
+        end
+        
+        enhanced_prompt = "#{prompt}\n\nPlease use the following web search results to provide current, up-to-date information:#{web_context}"
+        
+        # Get AI response with web context
+        chat(enhanced_prompt, model: model, **opts)
+      rescue WebSearch::SearchError => e
+        # Fallback to regular chat if web search fails
+        chat(prompt, model: model, **opts)
+      end
+    else
+      # Regular chat for non-time-sensitive queries
+      chat(prompt, model: model, **opts)
+    end
+  end
+end
+
+  # Response cleaning utility
+  def self.clean_response(raw_response)
+    return nil if raw_response.nil?
+
+    # Convert to string
+    response = raw_response.to_s
+    
+    # Ensure UTF-8 encoding
+    response = response.encode('UTF-8', 'UTF-8', invalid: :replace, undef: :replace, replace: '?')
+    
+    # Remove any control characters that might cause issues
+    response = response.gsub(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/, '')
+    
+    response
+  end
+
+  # Enhanced chat method with automatic response cleaning
+  def self.chat_clean(prompt_or_messages, model: config.default_model, **opts)
+    raw_response = chat(prompt_or_messages, model: model, **opts)
+    clean_response(raw_response)
+  end
+
+  # Enhanced web search chat with automatic response cleaning
+  def self.chat_with_web_search_clean(prompt, model: config.default_model, **opts)
+    raw_response = chat_with_web_search(prompt, model: model, **opts)
+    clean_response(raw_response)
+  end
+end

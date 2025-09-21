@@ -102,13 +102,13 @@ module RailsAi
                    end
       end
       
-      def search(query, **options)
+      def search(query, num_results: 5, **options)
         @provider.search(query, **options)
       end
     end
     
     # Convenience method
-    def self.search(query, provider: :google, **options)
+    def self.search(query, provider: :google, num_results: 5, **options)
       WebSearch.new(provider: provider, **options).search(query)
     end
   end
