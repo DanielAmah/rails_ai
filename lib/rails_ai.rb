@@ -84,7 +84,7 @@ module RailsAi
     end
 
     def smart_cache
-      @smart_cache ||= Cache.new
+      @smart_cache ||= Cache
     end
 
     def request_deduplicator
