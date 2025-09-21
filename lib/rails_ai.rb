@@ -88,11 +88,11 @@ module RailsAi
     end
 
     def request_deduplicator
-      @request_deduplicator ||= RequestDeduplicator.new
+      @request_deduplicator ||= Performance::RequestDeduplicator.new
     end
 
     def performance_monitor
-      @performance_monitor ||= Performance::Monitor.new
+      @performance_monitor ||= Performance::PerformanceMonitor.new
     end
 
     def agent_manager
