@@ -21,7 +21,10 @@ Gem::Specification.new do |s|
   s.files = Dir.chdir(__dir__) do
     `git ls-files -z`.split("\x0").reject do |f|
       (File.expand_path(f) == __FILE__) ||
-        f.start_with?(*%w[bin/ test/ spec/ features/ .git .github appveyor Gemfile])
+        f.start_with?(*%w[bin/ test/ spec/ features/ .git .github appveyor Gemfile]) ||
+        f.end_with?(".gem") ||
+        f.include?("security_scan_report") ||
+        f.include?("monitoring_log")
     end
   end
   s.bindir = "exe"
