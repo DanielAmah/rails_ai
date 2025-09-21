@@ -10,8 +10,8 @@ Gem::Specification.new do |s|
   s.summary = "AI toolkit deeply integrated into Rails applications"
   s.description = "A comprehensive AI toolkit for Rails with multi-provider support, context awareness, and performance optimizations"
   s.homepage = "https://github.com/DanielAmah/rails_ai"
-  s.license = "MIT with Non-Commercial Use Restriction"
-  s.licenses = ["MIT with Non-Commercial Use Restriction"]
+  s.license = "Nonstandard"
+  s.licenses = ["Nonstandard"]
   s.required_ruby_version = ">= 2.7.0"
 
   s.metadata["homepage_uri"] = s.homepage

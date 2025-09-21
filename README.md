@@ -276,7 +276,7 @@ def develop_new_feature(requirements)
 end
 ```
 
-## �� Advanced Usage
+## Advanced Usage
 
 ### Context-Aware AI
 
