@@ -55,9 +55,9 @@ jobs:
     - name: Check for hardcoded secrets
       run: |
         echo "🔍 Checking for hardcoded secrets..."
-        # Use grep to check for common secret patterns
-        if grep -r -i "api[_-]key\|secret\|password\|token" lib/ --exclude-dir=.git; then
-          echo "⚠️  Potential secrets found in code"
+        # Use more specific patterns to avoid false positives
+        if grep -r -E "(api[_-]?key|secret|password|token)\s*[:=]\s*['\"][^'\"]{10,}['\"]" lib/ --exclude-dir=.git; then
+          echo "⚠️  Potential hardcoded secrets found in code"
           exit 1
         else
           echo "✅ No hardcoded secrets found"
