@@ -23,17 +23,32 @@ jobs:
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: '3.0'
+        ruby-version: '3.2'
         
     - name: Install dependencies
       run: |
         gem install bundler
         bundle install
         
+    - name: Check for hardcoded secrets
+      run: |
+        echo "🔍 Checking for hardcoded secrets..."
+        # Use grep to check for common secret patterns
+        if grep -r -i "api[_-]key\|secret\|password\|token" lib/ --exclude-dir=.git; then
+          echo "⚠️  Potential secrets found in code"
+          exit 1
+        else
+          echo "✅ No hardcoded secrets found"
+        fi
+        
     - name: Run security tests
       run: |
-        echo "�� Running security tests..."
-        bundle exec rspec spec/security/ --format documentation
+        echo "🧪 Running security tests..."
+        if [ -d "spec/security" ]; then
+          bundle exec rspec spec/security/ --format documentation
+        else
+          echo "No security tests found, skipping..."
+        fi
         
     - name: Run Brakeman security scan
       run: |
@@ -43,7 +58,7 @@ jobs:
         
     - name: Run Bundle Audit
       run: |
-        echo "🔍 Running bundle audit..."
+        echo "�� Running bundle audit..."
         gem install bundle-audit
         bundle-audit check --update || true
         
@@ -51,6 +66,17 @@ jobs:
       run: |
         echo "🔍 Running RuboCop security checks..."
         bundle exec rubocop --only Security --format json --out rubocop-security.json || true
+        
+    - name: Check for sensitive files
+      run: |
+        echo "🔍 Checking for sensitive files..."
+        # Check for common sensitive file patterns
+        if find . -name "*.key" -o -name "*.pem" -o -name "*.p12" -o -name "*.pfx" | grep -v .git; then
+          echo "⚠️  Sensitive files found"
+          exit 1
+        else
+          echo "✅ No sensitive files found"
+        fi
         
     - name: Upload security reports
       uses: actions/upload-artifact@v4
