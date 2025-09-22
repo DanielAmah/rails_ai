@@ -5,18 +5,67 @@ All notable changes to the Rails AI gem will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.8] - 2024-09-22
+
+### Fixed
+- Fixed security scan failures and false positives in CI/CD workflows
+- Removed hardcoded 'default_secret' from API key manager for better security
+- Fixed web search to handle missing API keys gracefully without raising errors
+- Improved hardcoded secrets detection with more precise regex patterns
+- Updated security scanner to avoid false positives on legitimate code
+- Fixed CI/CD security workflows to pass successfully without false alarms
+
+### Security
+- Enhanced API key management with proper error handling for missing secrets
+- Improved web search fallback behavior when Google Search API key is not configured
+- Updated security scanning patterns to detect only actual hardcoded secrets
+- Fixed false positive detection in security workflows
+
+### Changed
+- Web search now logs warnings instead of raising errors for missing API keys
+- Security scanner patterns now more accurately identify hardcoded secrets
+- CI/CD workflows use improved regex patterns for secret detection
+- API key manager requires proper environment variables or Rails secret_key_base
+
+## [0.2.7] - 2024-09-21
+
+### Fixed
+- Fixed Cache module instantiation error in version 0.2.7
+- Resolved undefined method 'new' for RailsAi::Cache:Module error
+- Corrected smart_cache assignment to use module instead of class instantiation
+- Fixed agent functionality in demo application
+
+### Changed
+- Updated smart_cache to use Cache module directly instead of instantiating
+- Enhanced error handling for module vs class usage
+
+## [0.2.6] - 2024-09-21
+
+### Fixed
+- Fixed Performance class references in version 0.2.6
+- Resolved uninitialized constant errors in demo app
+- Fixed Performance::Monitor to Performance::PerformanceMonitor
+- Fixed ConnectionPool to Performance::ConnectionPool
+- Fixed BatchProcessor to Performance::BatchProcessor
+- Fixed SmartCache to Performance::SmartCache
+- Fixed RequestDeduplicator to Performance::RequestDeduplicator
+
+### Changed
+- Updated all performance class references to use proper namespacing
+- Enhanced error handling for performance monitoring
+
 ## [0.2.5] - 2024-09-21
 
 ### Fixed
-- Fixed critical syntax error with unmatched `end` statements in `lib/rails_ai.rb`
-- Resolved `SyntaxError: unexpected 'end'` that was preventing gem loading
+- Fixed critical syntax error with unmatched 'end' statements in lib/rails_ai.rb
+- Resolved SyntaxError: unexpected 'end' that was preventing gem loading
 - Properly structured module and method definitions within correct scope
 - Fixed gem loading issues that were causing Rails applications to fail
 
 ### Added
-- `clean_response` utility method for automatic UTF-8 encoding and character cleaning
-- `chat_clean` method that automatically cleans AI responses
-- `chat_with_web_search_clean` method with automatic response cleaning
+- clean_response utility method for automatic UTF-8 encoding and character cleaning
+- chat_clean method that automatically cleans AI responses
+- chat_with_web_search_clean method with automatic response cleaning
 - Enhanced error handling for malformed responses
 
 ### Changed
@@ -28,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed character encoding issues in AI responses
-- Resolved `JSON::GeneratorError` in agent functionality
+- Resolved JSON::GeneratorError in agent functionality
 - Fixed garbled character display in agent responses
 
 ### Added
@@ -43,8 +92,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.3] - 2024-09-21
 
 ### Fixed
-- Fixed `create_agent_team` method to use correct parameter name (`collaboration_strategy` instead of `strategy`)
-- Resolved `ArgumentError: unknown keyword: :strategy` in agent team creation
+- Fixed create_agent_team method to use correct parameter name (collaboration_strategy instead of strategy)
+- Resolved ArgumentError: unknown keyword: :strategy in agent team creation
 - Improved agent task execution to return meaningful AI-generated results instead of just task confirmation
 
 ### Changed
@@ -55,7 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed streaming demo EventSource MIME type error by properly handling GET requests for Server-Sent Events
-- Resolved `CookieOverflow` error by implementing file-based storage for large AI responses
+- Resolved CookieOverflow error by implementing file-based storage for large AI responses
 - Fixed compressed response display by adding Zlib decompression in streaming controller
 - Updated streaming view to handle plain text responses instead of expecting JSON
 
@@ -67,15 +116,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.1] - 2024-09-21
 
 ### Added
-- Web search integration with `WebSearch` module supporting Google Search and DuckDuckGo
-- `chat_with_web_search` method for real-time information retrieval
+- Web search integration with WebSearch module supporting Google Search and DuckDuckGo
+- chat_with_web_search method for real-time information retrieval
 - Support for current, latest, today, now, recent, weather, news, stock, price keywords
 - Web search fallback to regular chat if search fails
 
 ### Fixed
-- Fixed `ArgumentError: unknown keyword: :num_results` in web search integration
-- Resolved method visibility issues with `validate_messages` method
-- Fixed file loading conflicts between duplicate `InputValidator` classes
+- Fixed ArgumentError: unknown keyword: :num_results in web search integration
+- Resolved method visibility issues with validate_messages method
+- Fixed file loading conflicts between duplicate InputValidator classes
 
 ### Changed
 - Updated demo app to use GPT-4o instead of non-existent GPT-5
@@ -86,15 +135,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Web search integration with Google Search and DuckDuckGo providers
-- `WebSearch` module with `GoogleSearch` and `DuckDuckGoSearch` classes
-- `chat_with_web_search` method for real-time information retrieval
+- WebSearch module with GoogleSearch and DuckDuckGoSearch classes
+- chat_with_web_search method for real-time information retrieval
 - Support for current events, news, weather, and time-sensitive queries
 - Web search fallback to regular chat if search fails
 
 ### Fixed
-- Fixed `SyntaxError: unexpected 'end'` in `lib/rails_ai.rb`
-- Resolved `ArgumentError: unknown keyword: :num_results` in web search
-- Fixed method parameter passing in `WebSearch.search` method
+- Fixed SyntaxError: unexpected 'end' in lib/rails_ai.rb
+- Resolved ArgumentError: unknown keyword: :num_results in web search
+- Fixed method parameter passing in WebSearch.search method
 
 ### Changed
 - Enhanced chat functionality with web search capabilities
@@ -104,42 +153,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.6] - 2024-09-21
 
 ### Fixed
-- Fixed `NoMethodError: undefined method 'megabytes'` by adding ActiveSupport dependency
+- Fixed NoMethodError: undefined method 'megabytes' by adding ActiveSupport dependency
 - Resolved gem loading issues in demo application
-- Fixed `ArgumentError: unknown keyword: :collaboration_strategy` in agent team creation
+- Fixed ArgumentError: unknown keyword: :collaboration_strategy in agent team creation
 
 ### Changed
-- Updated `rails_ai.gemspec` to include `activesupport` dependency
+- Updated rails_ai.gemspec to include activesupport dependency
 - Enhanced agent team creation with proper parameter handling
 - Improved error handling for missing ActiveSupport extensions
 
 ## [0.1.5] - 2024-09-21
 
 ### Fixed
-- Fixed method visibility issues with `validate_messages` method
-- Resolved `NoMethodError: undefined method 'validate_messages'` in security validation
-- Fixed file loading conflicts between duplicate `InputValidator` classes
+- Fixed method visibility issues with validate_messages method
+- Resolved NoMethodError: undefined method 'validate_messages' in security validation
+- Fixed file loading conflicts between duplicate InputValidator classes
 
 ### Changed
-- Updated `lib/rails_ai/security.rb` to properly require input validator
-- Removed duplicate `InputValidator` class definition
+- Updated lib/rails_ai/security.rb to properly require input validator
+- Removed duplicate InputValidator class definition
 - Enhanced security validation method availability
 
 ## [0.1.4] - 2024-09-21
 
 ### Fixed
-- Fixed `NoMethodError: undefined method 'validate_messages'` by making method public
+- Fixed NoMethodError: undefined method 'validate_messages' by making method public
 - Resolved security validation issues in demo application
-- Fixed method visibility in `InputValidator` class
+- Fixed method visibility in InputValidator class
 
 ### Changed
-- Moved `validate_messages` method above `private` keyword in `InputValidator`
+- Moved validate_messages method above private keyword in InputValidator
 - Enhanced security validation method accessibility
 
 ## [0.1.3] - 2024-09-21
 
 ### Fixed
-- Fixed `NoMethodError: undefined method 'validate_messages'` in security validation
+- Fixed NoMethodError: undefined method 'validate_messages' in security validation
 - Resolved method availability issues in demo application
 - Fixed security validation method calls
 
@@ -150,24 +199,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.2] - 2024-09-21
 
 ### Fixed
-- Fixed CI failure with `rails_ai-0.1.1 contains itself` error
+- Fixed CI failure with rails_ai-0.1.1 contains itself error
 - Resolved gemspec file inclusion issues
-- Fixed `.gem` file inclusion in `s.files` list
+- Fixed .gem file inclusion in s.files list
 
 ### Changed
-- Updated `rails_ai.gemspec` to exclude generated `.gem` files
-- Added `*.gem` to `.gitignore`
+- Updated rails_ai.gemspec to exclude generated .gem files
+- Added *.gem to .gitignore
 - Enhanced gemspec file filtering
 
 ## [0.1.1] - 2024-09-21
 
 ### Fixed
-- Fixed `NoMethodError: undefined method 'megabytes'` by adding ActiveSupport dependency
+- Fixed NoMethodError: undefined method 'megabytes' by adding ActiveSupport dependency
 - Resolved gem loading issues in demo application
-- Fixed `ArgumentError: unknown keyword: :collaboration_strategy` in agent team creation
+- Fixed ArgumentError: unknown keyword: :collaboration_strategy in agent team creation
 
 ### Changed
-- Updated `rails_ai.gemspec` to include `activesupport` dependency
+- Updated rails_ai.gemspec to include activesupport dependency
 - Enhanced agent team creation with proper parameter handling
 - Improved error handling for missing ActiveSupport extensions
 
@@ -230,7 +279,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Commercial license template ($999/year)
 
 ### Demo Application
-- Complete Rails demo application (`rails_ai_demo`)
+- Complete Rails demo application (rails_ai_demo)
 - All features demonstrated with working examples
 - Modern UI with responsive design
 - Real-time streaming chat
