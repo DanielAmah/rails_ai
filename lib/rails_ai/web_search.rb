@@ -7,7 +7,7 @@ require 'uri'
 module RailsAi
   module WebSearch
     class SearchError < StandardError; end
-    
+
     class GoogleSearch
       def initialize(api_key: nil, search_engine_id: nil)
         @api_key = api_key || ENV['GOOGLE_SEARCH_API_KEY']
@@ -16,32 +16,37 @@ module RailsAi
       end
       
       def search(query, num_results: 5)
-        raise SearchError, "Google Search API key not configured" unless @api_key
-        raise SearchError, "Google Search Engine ID not configured" unless @search_engine_id
+        unless @api_key && !@api_key.empty?
+          Rails.logger.warn "Google Search API key not configured, skipping web search" if defined?(Rails) && Rails.logger
+          return []
+        end
         
-        uri = URI(@base_url)
-        params = {
-          key: @api_key,
-          cx: @search_engine_id,
-          q: query,
-          num: num_results
-        }
-        uri.query = URI.encode_www_form(params)
+        unless @search_engine_id && !@search_engine_id.empty?
+          Rails.logger.warn "Google Search Engine ID not configured, skipping web search" if defined?(Rails) && Rails.logger
+          return []
+        end
+        
+        uri = URI("#{@base_url}?key=#{@api_key}&cx=#{@search_engine_id}&q=#{URI.encode_www_form_component(query)}&num=#{num_results}")
         
         response = Net::HTTP.get_response(uri)
-        raise SearchError, "Search failed: #{response.code}" unless response.code == '200'
         
-        data = JSON.parse(response.body)
-        format_results(data)
+        if response.code == '200'
+          data = JSON.parse(response.body)
+          parse_results(data)
+        else
+          Rails.logger.error "Google Search API error: #{response.code} - #{response.body}" if defined?(Rails) && Rails.logger
+          []
+        end
       rescue => e
-        raise SearchError, "Web search error: #{e.message}"
+        Rails.logger.error "Web search error: #{e.message}" if defined?(Rails) && Rails.logger
+        []
       end
       
       private
       
-      def format_results(data)
-        results = data['items'] || []
-        results.map do |item|
+      def parse_results(data)
+        items = data['items'] || []
+        items.map do |item|
           {
             title: item['title'],
             link: item['link'],
@@ -50,66 +55,73 @@ module RailsAi
         end
       end
     end
-    
+
     class DuckDuckGoSearch
+      def initialize
+        @base_url = 'https://api.duckduckgo.com'
+      end
+      
       def search(query, num_results: 5)
-        # Simple web scraping approach (for demo purposes)
-        # In production, you'd want to use a proper API
-        uri = URI("https://html.duckduckgo.com/html/?q=#{URI.encode_www_form_component(query)}")
+        uri = URI("#{@base_url}/?q=#{URI.encode_www_form_component(query)}&format=json&no_html=1&skip_disambig=1")
         
         response = Net::HTTP.get_response(uri)
-        raise SearchError, "Search failed: #{response.code}" unless response.code == '200'
         
-        # Parse HTML and extract results (simplified)
-        parse_duckduckgo_results(response.body, num_results)
+        if response.code == '200'
+          data = JSON.parse(response.body)
+          parse_results(data, num_results)
+        else
+          Rails.logger.error "DuckDuckGo API error: #{response.code} - #{response.body}" if defined?(Rails) && Rails.logger
+          []
+        end
       rescue => e
-        raise SearchError, "Web search error: #{e.message}"
+        Rails.logger.error "DuckDuckGo search error: #{e.message}" if defined?(Rails) && Rails.logger
+        []
       end
       
       private
       
-      def parse_duckduckgo_results(html, num_results)
-        # This is a simplified parser - in production you'd use Nokogiri
+      def parse_results(data, num_results)
         results = []
-        lines = html.split("\n")
         
-        lines.each_with_index do |line, index|
-          if line.include?('class="result__title"') && results.length < num_results
-            title_line = lines[index + 1] rescue ""
-            snippet_line = lines[index + 3] rescue ""
-            
-            results << {
-              title: title_line.strip,
-              link: "https://duckduckgo.com",
-              snippet: snippet_line.strip
-            }
+        # Add instant answer if available
+        if data['Abstract'] && !data['Abstract'].empty?
+          results << {
+            title: data['Heading'] || 'Instant Answer',
+            link: data['AbstractURL'] || '',
+            snippet: data['Abstract']
+          }
+        end
+        
+        # Add related topics
+        if data['RelatedTopics']
+          data['RelatedTopics'].first(num_results - results.length).each do |topic|
+            if topic.is_a?(Hash) && topic['Text']
+              results << {
+                title: topic['FirstURL'] ? topic['FirstURL'].split('/').last : 'Related Topic',
+                link: topic['FirstURL'] || '',
+                snippet: topic['Text']
+              }
+            end
           end
         end
         
-        results
+        results.first(num_results)
       end
     end
-    
-    class WebSearch
-      def initialize(provider: :google, **options)
-        @provider = case provider
-                   when :google
-                     GoogleSearch.new(**options)
-                   when :duckduckgo
-                     DuckDuckGoSearch.new(**options)
-                   else
-                     raise SearchError, "Unsupported search provider: #{provider}"
-                   end
+
+    def self.search(query, num_results: 5, provider: :google)
+      case provider.to_sym
+      when :google
+        GoogleSearch.new.search(query, num_results: num_results)
+      when :duckduckgo
+        DuckDuckGoSearch.new.search(query, num_results: num_results)
+      else
+        # Try Google first, fallback to DuckDuckGo
+        google_results = GoogleSearch.new.search(query, num_results: num_results)
+        return google_results if google_results.any?
+        
+        DuckDuckGoSearch.new.search(query, num_results: num_results)
       end
-      
-      def search(query, num_results: 5, **options)
-        @provider.search(query, **options)
-      end
-    end
-    
-    # Convenience method
-    def self.search(query, provider: :google, num_results: 5, **options)
-      WebSearch.new(provider: provider, **options).search(query)
     end
   end
 end
